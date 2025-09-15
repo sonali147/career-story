@@ -1,10 +1,11 @@
 import os
+import re
 from datetime import date
 from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-from typing import List
+from typing import List, Optional
 import openai
 
 # Load environment variables (your API key)
@@ -43,7 +44,87 @@ class ReportRequest(BaseModel):
     start_date: str # format: YYYY-MM-DD
     end_date: str   # format: YYYY-MM-DD
 
+# --- Helper Functions ---
+def parse_markdown_log(file_path: str) -> Optional[DailyLog]:
+    """Parse a markdown log file back into DailyLog structure."""
+    try:
+        with open(file_path, "r") as f:
+            content = f.read()
+        
+        # Extract date from filename
+        filename = os.path.basename(file_path)
+        log_date = filename.replace('.md', '')
+        
+        # Parse name
+        name_match = re.search(r'\*\*Name:\*\* (.+)', content)
+        name = name_match.group(1) if name_match else ""
+        
+        # Parse project
+        project_match = re.search(r'\*\*Project / Sprint:\*\* (.+)', content)
+        project = project_match.group(1) if project_match else ""
+        
+        # Parse tasks completed
+        tasks_completed = []
+        tasks_completed_section = re.search(r'### ✅ Tasks Completed Today\n(.*?)(?=\n### |$)', content, re.DOTALL)
+        if tasks_completed_section:
+            tasks_text = tasks_completed_section.group(1)
+            tasks_completed = [line.strip('* ').strip() for line in tasks_text.split('\n') if line.strip() and not line.strip() == '* No tasks completed']
+        
+        # Parse tasks planned
+        tasks_planned = []
+        tasks_planned_section = re.search(r'### 📋 Tasks Planned for Tomorrow\n(.*?)(?=\n### |$)', content, re.DOTALL)
+        if tasks_planned_section:
+            tasks_text = tasks_planned_section.group(1)
+            tasks_planned = [line.strip('* ').strip() for line in tasks_text.split('\n') if line.strip() and not line.strip() == '* No tasks planned']
+        
+        # Parse blockers
+        blockers = []
+        blockers_section = re.search(r'### 🚧 Blockers\n(.*?)(?=\n### |$)', content, re.DOTALL)
+        if blockers_section:
+            blockers_text = blockers_section.group(1)
+            blockers = [line.strip('* ').strip() for line in blockers_text.split('\n') if line.strip() and not line.strip() == '* No blockers']
+        
+        # Parse reflection well
+        reflection_well = ""
+        reflection_well_match = re.search(r'\*\*What went well:\*\* (.+?)(?=\n\n|\*\*|$)', content, re.DOTALL)
+        if reflection_well_match:
+            reflection_well = reflection_well_match.group(1).strip()
+        
+        # Parse reflection improve
+        reflection_improve = ""
+        reflection_improve_match = re.search(r'\*\*What could be improved:\*\* (.+?)(?=\n|$)', content, re.DOTALL)
+        if reflection_improve_match:
+            reflection_improve = reflection_improve_match.group(1).strip()
+        
+        return DailyLog(
+            log_date=log_date,
+            name=name,
+            project=project,
+            tasks_completed=tasks_completed,
+            tasks_planned=tasks_planned,
+            blockers=blockers,
+            reflection_well=reflection_well,
+            reflection_improve=reflection_improve
+        )
+    except Exception as e:
+        print(f"Error parsing log file {file_path}: {e}")
+        return None
+
 # --- API Endpoints ---
+@app.get("/log/{log_date}")
+def get_log(log_date: str):
+    """Get an existing log entry for a specific date."""
+    file_path = os.path.join(LOGS_DIRECTORY, f"{log_date}.md")
+    
+    if not os.path.exists(file_path):
+        raise HTTPException(status_code=404, detail="Log not found for this date")
+    
+    log_data = parse_markdown_log(file_path)
+    if log_data is None:
+        raise HTTPException(status_code=500, detail="Error parsing existing log")
+    
+    return log_data
+
 @app.post("/log")
 def save_log(log: DailyLog):
     """Saves a daily log entry to a markdown file."""
