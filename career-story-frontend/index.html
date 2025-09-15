@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Career Story Builder</title>
+    <style> 
+        body { 
+            font-family: sans-serif; 
+            display: flex; 
+            padding: 20px; 
+        } 
+        .column { 
+            flex: 1; 
+            padding: 10px; 
+        }
+        label {
+            display: block;
+            margin-top: 10px;
+            font-weight: bold;
+        }
+        input, textarea {
+            margin-bottom: 10px;
+        }
+        .optional {
+            color: #666;
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+    <div class="column" id="entry-form">
+        <h2>📌 Daily Work Log</h2>
+        <form id="log-form">
+            <label>Date:</label>
+            <input type="date" id="log-date" required><br>
+            
+            <label>Project Name:</label>
+            <input type="text" id="project-name" placeholder="e.g., Avyott" required><br>
+            
+            <label>Tasks Completed (one per line):</label>
+            <textarea id="tasks-completed" rows="5" style="width: 90%;" required></textarea><br>
+            
+            <label class="optional">Tasks Planned for Tomorrow (optional, one per line):</label>
+            <textarea id="tasks-planned" rows="3" style="width: 90%;"></textarea><br>
+            
+            <label class="optional">Blockers (optional, one per line):</label>
+            <textarea id="blockers" rows="3" style="width: 90%;"></textarea><br>
+            
+            <label class="optional">What went well today? (optional):</label>
+            <textarea id="reflection-well" rows="3" style="width: 90%;"></textarea><br>
+            
+            <label class="optional">What could be improved? (optional):</label>
+            <textarea id="reflection-improve" rows="3" style="width: 90%;"></textarea><br>
+            
+            <button type="submit">Save Log</button>
+        </form>
+        <hr>
+        <h2>📊 Generate Report</h2>
+        <label>Start Date:</label>
+        <input type="date" id="start-date">
+        <label>End Date:</label>
+        <input type="date" id="end-date">
+        <button id="generate-btn">Generate</button>
+    </div>
+    <div class="column" id="report-view">
+        <h2>Generated Report</h2>
+        <div id="report-output" style="white-space: pre-wrap; background-color: #f4f4f4; border: 1px solid #ccc; padding: 15px; height: 90vh; overflow-y: scroll;">
+            Your report will appear here...
+        </div>
+    </div>
+    <script src="./renderer.js"></script>
+</body>
+</html>
