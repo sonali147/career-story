@@ -1,12 +1,198 @@
 const API_BASE_URL = 'http://127.0.0.1:8000';
 
+// Task management functions
+function addTask(listId) {
+    const taskList = document.getElementById(listId);
+    
+    // Remove empty state if it exists
+    const emptyState = taskList.querySelector('.empty-state');
+    if (emptyState) {
+        emptyState.remove();
+    }
+    
+    // Create task input container
+    const taskInputContainer = document.createElement('div');
+    taskInputContainer.className = 'task-input-container';
+    
+    const taskInput = document.createElement('input');
+    taskInput.type = 'text';
+    taskInput.className = 'task-input';
+    taskInput.placeholder = 'Enter task...';
+    
+    const saveBtn = document.createElement('button');
+    saveBtn.type = 'button';
+    saveBtn.className = 'task-btn save-task-btn';
+    saveBtn.textContent = 'Save';
+    
+    const cancelBtn = document.createElement('button');
+    cancelBtn.type = 'button';
+    cancelBtn.className = 'task-btn cancel-task-btn';
+    cancelBtn.textContent = 'Cancel';
+    
+    taskInputContainer.appendChild(taskInput);
+    taskInputContainer.appendChild(saveBtn);
+    taskInputContainer.appendChild(cancelBtn);
+    
+    taskList.appendChild(taskInputContainer);
+    
+    // Focus on input
+    taskInput.focus();
+    
+    // Save task
+    const saveTask = () => {
+        const taskText = taskInput.value.trim();
+        if (taskText) {
+            createTaskItem(listId, taskText);
+        }
+        taskInputContainer.remove();
+        updateEmptyState(listId);
+    };
+    
+    // Cancel task
+    const cancelTask = () => {
+        taskInputContainer.remove();
+        updateEmptyState(listId);
+    };
+    
+    // Event listeners
+    saveBtn.addEventListener('click', saveTask);
+    cancelBtn.addEventListener('click', cancelTask);
+    
+    // Save on Enter key
+    taskInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+            saveTask();
+        }
+    });
+    
+    // Cancel on Escape key
+    taskInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+            cancelTask();
+        }
+    });
+}
+
+function createTaskItem(listId, taskText) {
+    const taskList = document.getElementById(listId);
+    
+    const taskItem = document.createElement('div');
+    taskItem.className = 'task-item';
+    
+    const taskTextElement = document.createElement('input');
+    taskTextElement.type = 'text';
+    taskTextElement.className = 'task-text';
+    taskTextElement.value = taskText;
+    taskTextElement.readOnly = true;
+    
+    const taskActions = document.createElement('div');
+    taskActions.className = 'task-actions';
+    
+    const editBtn = document.createElement('button');
+    editBtn.type = 'button';
+    editBtn.className = 'task-btn save-task-btn';
+    editBtn.textContent = 'Edit';
+    
+    const removeBtn = document.createElement('button');
+    removeBtn.type = 'button';
+    removeBtn.className = 'task-btn remove-task-btn';
+    removeBtn.textContent = 'Remove';
+    
+    taskActions.appendChild(editBtn);
+    taskActions.appendChild(removeBtn);
+    
+    taskItem.appendChild(taskTextElement);
+    taskItem.appendChild(taskActions);
+    
+    taskList.appendChild(taskItem);
+    
+    // Edit functionality
+    let isEditing = false;
+    editBtn.addEventListener('click', () => {
+        if (!isEditing) {
+            taskTextElement.readOnly = false;
+            taskTextElement.focus();
+            taskTextElement.select();
+            editBtn.textContent = 'Save';
+            isEditing = true;
+        } else {
+            taskTextElement.readOnly = true;
+            editBtn.textContent = 'Edit';
+            isEditing = false;
+        }
+    });
+    
+    // Save on Enter when editing
+    taskTextElement.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter' && isEditing) {
+            taskTextElement.readOnly = true;
+            editBtn.textContent = 'Edit';
+            isEditing = false;
+        }
+    });
+    
+    // Remove functionality
+    removeBtn.addEventListener('click', () => {
+        taskItem.remove();
+        updateEmptyState(listId);
+    });
+}
+
+function updateEmptyState(listId) {
+    const taskList = document.getElementById(listId);
+    const taskItems = taskList.querySelectorAll('.task-item');
+    
+    if (taskItems.length === 0) {
+        const emptyState = document.createElement('div');
+        emptyState.className = 'empty-state';
+        
+        if (listId === 'tasks-completed-list') {
+            emptyState.textContent = 'No tasks completed yet. Click + to add tasks.';
+        } else if (listId === 'tasks-planned-list') {
+            emptyState.textContent = 'No tasks planned yet. Click + to add tasks.';
+        } else if (listId === 'blockers-list') {
+            emptyState.textContent = 'No blockers yet. Click + to add blockers.';
+        }
+        
+        taskList.appendChild(emptyState);
+    }
+}
+
+function getTasksFromList(listId) {
+    const taskList = document.getElementById(listId);
+    const taskItems = taskList.querySelectorAll('.task-item');
+    const tasks = [];
+    
+    taskItems.forEach(item => {
+        const taskText = item.querySelector('.task-text').value.trim();
+        if (taskText) {
+            tasks.push(taskText);
+        }
+    });
+    
+    return tasks;
+}
+
+function populateTasksInList(listId, tasks) {
+    const taskList = document.getElementById(listId);
+    taskList.innerHTML = '';
+    
+    if (tasks.length === 0) {
+        updateEmptyState(listId);
+    } else {
+        tasks.forEach(task => {
+            createTaskItem(listId, task);
+        });
+    }
+}
+
 // Function to clear all form fields
 function clearForm() {
     document.getElementById('log-date').value = '';
     document.getElementById('project-name').value = '';
-    document.getElementById('tasks-completed').value = '';
-    document.getElementById('tasks-planned').value = '';
-    document.getElementById('blockers').value = '';
+    populateTasksInList('tasks-completed-list', []);
+    populateTasksInList('tasks-planned-list', []);
+    populateTasksInList('blockers-list', []);
     document.getElementById('reflection-well').value = '';
     document.getElementById('reflection-improve').value = '';
 }
@@ -15,11 +201,11 @@ function clearForm() {
 function populateForm(logData) {
     document.getElementById('log-date').value = logData.log_date;
     document.getElementById('project-name').value = logData.project;
-    document.getElementById('tasks-completed').value = logData.tasks_completed.join('\n');
-    document.getElementById('tasks-planned').value = logData.tasks_planned.join('\n');
-    document.getElementById('blockers').value = logData.blockers.join('\n');
-    document.getElementById('reflection-well').value = logData.reflection_well;
-    document.getElementById('reflection-improve').value = logData.reflection_improve;
+    populateTasksInList('tasks-completed-list', logData.tasks_completed || []);
+    populateTasksInList('tasks-planned-list', logData.tasks_planned || []);
+    populateTasksInList('blockers-list', logData.blockers || []);
+    document.getElementById('reflection-well').value = logData.reflection_well || '';
+    document.getElementById('reflection-improve').value = logData.reflection_improve || '';
 }
 
 // Function to fetch and populate existing log data
@@ -65,9 +251,9 @@ document.getElementById('log-form').addEventListener('submit', async (e) => {
         log_date: document.getElementById('log-date').value,
         name: "Sonali Gupta", // Or get from input
         project: document.getElementById('project-name').value,
-        tasks_completed: document.getElementById('tasks-completed').value.split('\n').filter(t => t.trim()),
-        tasks_planned: document.getElementById('tasks-planned').value.split('\n').filter(t => t.trim()),
-        blockers: document.getElementById('blockers').value.split('\n').filter(t => t.trim()),
+        tasks_completed: getTasksFromList('tasks-completed-list'),
+        tasks_planned: getTasksFromList('tasks-planned-list'),
+        blockers: getTasksFromList('blockers-list'),
         reflection_well: document.getElementById('reflection-well').value.trim(),
         reflection_improve: document.getElementById('reflection-improve').value.trim()
     };

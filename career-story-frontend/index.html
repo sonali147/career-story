@@ -49,6 +49,109 @@
         button[type="button"]:hover {
             background-color: #545b62;
         }
+        
+        /* Task list styles */
+        .task-list {
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 10px;
+            margin-bottom: 10px;
+            background-color: #f9f9f9;
+        }
+        .task-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 8px;
+            padding: 5px;
+            background-color: white;
+            border-radius: 3px;
+            border: 1px solid #e0e0e0;
+        }
+        .task-item:last-child {
+            margin-bottom: 0;
+        }
+        .task-text {
+            flex: 1;
+            padding: 5px;
+            border: none;
+            background: transparent;
+            font-size: 14px;
+        }
+        .task-text:focus {
+            outline: 2px solid #007bff;
+            background-color: #f0f8ff;
+        }
+        .task-actions {
+            display: flex;
+            gap: 5px;
+        }
+        .task-btn {
+            padding: 4px 8px;
+            font-size: 12px;
+            border-radius: 3px;
+            cursor: pointer;
+            border: none;
+        }
+        .add-task-btn {
+            background-color: #28a745;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            margin-top: 5px;
+        }
+        .add-task-btn:hover {
+            background-color: #218838;
+        }
+        .remove-task-btn {
+            background-color: #dc3545;
+            color: white;
+        }
+        .remove-task-btn:hover {
+            background-color: #c82333;
+        }
+        .save-task-btn {
+            background-color: #007bff;
+            color: white;
+        }
+        .save-task-btn:hover {
+            background-color: #0056b3;
+        }
+        .cancel-task-btn {
+            background-color: #6c757d;
+            color: white;
+        }
+        .cancel-task-btn:hover {
+            background-color: #545b62;
+        }
+        .task-input-container {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            margin-bottom: 8px;
+        }
+        .task-input {
+            flex: 1;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 3px;
+            font-size: 14px;
+        }
+        .task-input:focus {
+            outline: 2px solid #007bff;
+            border-color: #007bff;
+        }
+        .empty-state {
+            color: #666;
+            font-style: italic;
+            text-align: center;
+            padding: 20px;
+            background-color: #f5f5f5;
+            border-radius: 4px;
+            border: 1px dashed #ccc;
+        }
     </style>
 </head>
 <body>
@@ -61,14 +164,23 @@
             <label>Project Name:</label>
             <input type="text" id="project-name" placeholder="e.g., Avyott" required><br>
             
-            <label>Tasks Completed (one per line):</label>
-            <textarea id="tasks-completed" rows="5" style="width: 90%;" required></textarea><br>
+            <label>Tasks Completed:</label>
+            <div class="task-list" id="tasks-completed-list">
+                <div class="empty-state">No tasks completed yet. Click + to add tasks.</div>
+            </div>
+            <button type="button" class="add-task-btn" onclick="addTask('tasks-completed-list')">+ Add Task</button><br>
             
-            <label class="optional">Tasks Planned for Tomorrow (optional, one per line):</label>
-            <textarea id="tasks-planned" rows="3" style="width: 90%;"></textarea><br>
+            <label class="optional">Tasks Planned for Tomorrow (optional):</label>
+            <div class="task-list" id="tasks-planned-list">
+                <div class="empty-state">No tasks planned yet. Click + to add tasks.</div>
+            </div>
+            <button type="button" class="add-task-btn" onclick="addTask('tasks-planned-list')">+ Add Task</button><br>
             
-            <label class="optional">Blockers (optional, one per line):</label>
-            <textarea id="blockers" rows="3" style="width: 90%;"></textarea><br>
+            <label class="optional">Blockers (optional):</label>
+            <div class="task-list" id="blockers-list">
+                <div class="empty-state">No blockers yet. Click + to add blockers.</div>
+            </div>
+            <button type="button" class="add-task-btn" onclick="addTask('blockers-list')">+ Add Blocker</button><br>
             
             <label class="optional">What went well today? (optional):</label>
             <textarea id="reflection-well" rows="3" style="width: 90%;"></textarea><br>
